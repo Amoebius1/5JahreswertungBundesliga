@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
+import re
 
 st.set_page_config(page_title="Bundesliga Fünfjahreswertung", layout="wide")
 
@@ -34,6 +35,7 @@ def load_season_data(year):
                     draws_col = [c for c in df.columns if c.strip().startswith("U")][0]
                     df = df[[team_col, wins_col, draws_col]]
                     df.columns = ["Team", "Wins", "Draws"]
+                    df["Team"] = df["Team"].apply(lambda x: re.sub(r"\\s*\\(.*?\\)", "", str(x)).strip())
                     df["Wins"] = pd.to_numeric(df["Wins"], errors='coerce')
                     df["Draws"] = pd.to_numeric(df["Draws"], errors='coerce')
                     df.dropna(inplace=True)
@@ -65,8 +67,8 @@ ranking_df = (
 )
 
 ranking_df.index += 1  # Rang beginnt bei 1
+ranking_df.rename_axis("Rang", inplace=True)
 ranking_df.reset_index(inplace=True)
-ranking_df.rename(columns={"index": "Rang"}, inplace=True)
 
 # Anzeige
 st.subheader(f"\U0001F3C5 Fünfjahreswertung {selected_year}")

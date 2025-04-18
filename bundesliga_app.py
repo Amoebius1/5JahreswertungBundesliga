@@ -52,13 +52,21 @@ season_df = pd.concat([load_season_data(y) for y in years], ignore_index=True)
 season_df["Weight"] = season_df["Season"].map(dict(zip(years, weights)))
 season_df["WeightedPoints"] = season_df["Points"] * season_df["Weight"]
 
-# Aggregierte Fünfjahreswertung
+# Aggregierte Fünfjahreswertung mit Aufschlüsselung
 ranking_df = (
     season_df.groupby("Team")
-    .agg(TotalPoints=("Points", "sum"), FiveYearScore=("WeightedPoints", "sum"))
+    .agg(
+        TotalPoints=("Points", "sum"),
+        WeightedBreakdown=("WeightedPoints", lambda x: list(x)),
+        FiveYearScore=("WeightedPoints", "sum")
+    )
     .sort_values("FiveYearScore", ascending=False)
     .reset_index()
 )
+
+ranking_df.index += 1  # Rang beginnt bei 1
+ranking_df.reset_index(inplace=True)
+ranking_df.rename(columns={"index": "Rang"}, inplace=True)
 
 # Anzeige
 st.subheader(f"\U0001F3C5 Fünfjahreswertung {selected_year}")
@@ -67,3 +75,4 @@ st.dataframe(ranking_df, use_container_width=True)
 # Optional: Details je Saison anzeigen
 if st.checkbox("\U0001F4C5 Saison-Daten anzeigen"):
     st.dataframe(season_df.sort_values(by=["Season", "Team"]), use_container_width=True)
+
